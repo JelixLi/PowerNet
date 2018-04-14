@@ -1,0 +1,1 @@
+/usr/bin/c++   -g -std=c++11 -DMDL_LINUX -O3 -DNDEBUG  -pthread CMakeFiles/caffe2mdl.dir/caffe2mdl.cpp.o CMakeFiles/caffe2mdl.dir/caffe.pb.cc.o  -o build/caffe2mdl -rdynamic -lprotobuf -lpthread 

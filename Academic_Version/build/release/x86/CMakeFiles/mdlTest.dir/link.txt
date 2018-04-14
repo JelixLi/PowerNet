@@ -1,0 +1,1 @@
+/usr/bin/c++   -g -std=c++11 -DMDL_LINUX -O3 -DNDEBUG  -pthread CMakeFiles/mdlTest.dir/test/main.cpp.o  -o build/mdlTest -rdynamic build/libmdl-static.a 
