@@ -149,9 +149,9 @@ namespace mdl {
 #else
         for (int i = 0; i < _layers.size(); i++) {
 
-           //cout << _layers[i]->name() << " input ="<< _layers[i]->input()[0]->descript()<<endl;
+           cout << _layers[i]->name() << " input ="<< _layers[i]->input()[0]->descript()<<endl;
             _layers[i]->forward();
-           //cout << _layers[i]->name() << "  output = "<<_layers[i]->output()[0]->descript()<<endl;
+           cout << _layers[i]->name() << "  output = "<<_layers[i]->output()[0]->descript()<<endl;
         }
 
 #endif
@@ -211,6 +211,15 @@ namespace mdl {
         }
     }
 
+    int exp_max(float f)
+    {
+        float f_1=floor(f);
+        float f_2=ceil(f);
+        float err_1=f-f_1;
+        float err_2=f_2-f;
+        return err_1>err_2?f_2:f_1;
+    }
+
     void Net::Transform_Conv()
     {
         int n=convptr.size();
@@ -242,7 +251,8 @@ namespace mdl {
                 {
                     int e;
                     bool s;
-                    e=orig_data[k]<0?log(orig_data[k]*-1)/log(2):log(orig_data[k])/log(2);
+                    float temp_e=orig_data[k]<0?log(orig_data[k]*-1)/log(2):log(orig_data[k])/log(2);
+                    e=exp_max(temp_e);
                     if(orig_data[k]<0)
                         s=0;
                     else
@@ -251,7 +261,7 @@ namespace mdl {
                     float wt=pow(2,e);
                     sum_1+=orig_data[k]*wt*2;
                     sum_2+=wt*wt*2;
- 
+
                     orig_data[k]=e;
                     sign_data[k]=s;
                     // if((k+1)%kernel_size==0)

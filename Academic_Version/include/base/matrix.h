@@ -147,7 +147,7 @@ namespace mdl {
                 c = 1;
             }
             for (int i = 0; i < k; i++) {
-                ss << data[i * c] << " ";
+                ss << data[i * c] << " "<<i*c<<" ";
             }
 
 

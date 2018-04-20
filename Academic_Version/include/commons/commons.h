@@ -19,7 +19,7 @@
  */
 #define MAX_INCEPTION_NUM  9
 
-//#define OPTIMIZE
+#define OPTIMIZE
 
 #ifdef ANDROID
 #include <android/log.h>

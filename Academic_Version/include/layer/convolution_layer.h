@@ -31,7 +31,7 @@ namespace mdl {
             ~ConvolutionLayer();
             void forward(int thread_num);
 
-            void chan_gemm(float *input_data,bool *sign_data,int locx,int locy,int kernal_h,int kernal_w,float *weight_data,int &sum);
+            void chan_gemm(float *input_data,bool *sign_data,int locx,int locy,int kernal_h,int kernal_w,float *weight_data,float &sum);
             void Power_Gemm(float *input_data,float *weight_data,float *output_data);
 
         private:

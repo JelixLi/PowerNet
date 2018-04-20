@@ -82,34 +82,47 @@ namespace mdl {
     } FP_SINGLE;
     
 
-    void ConvolutionLayer::chan_gemm(float *input_data,bool *sign_data,int locx,int locy,int kernel_h,int kernel_w,float *weight_data,int &sum)
+    void ConvolutionLayer::chan_gemm(float *input_data,bool *sign_data,int locx,int locy,int kernel_h,int kernel_w,float *weight_data,float &sum)
     {
         int input_width = _input[0]->dimension(3);
         int input_height = _input[0]->dimension(2);
 
         for(int i=0;i<kernel_h;i++)
             for(int j=0;j<kernel_w;j++)
-            {
+            {   
                 int x=locx+i;
                 int y=locy+j;
                 
-                if(x>=0&&y>=0&&x<input_width&&y<input_height)
+                if(x>=0&&y>=0&&x<input_height&&y<input_width)
                 {
                     int input_offset=x*input_width+y;
     
                     int weight_offset=i*kernel_w+j;
-
-                    //cout<<input_data[input_offset]<<" "<<weight_data[weight_offset]<<" ";
                     
-                    FP_SINGLE *fp=(FP_SINGLE*)&input_data[input_offset];
-                    fp->nExponent+=weight_data[weight_offset];
+                    // float t_1=input_data[input_offset];
+                    // float w=weight_data[weight_offset];
 
-                    //cout<<input_data[input_offset]<<endl;
+                    // FP_SINGLE *fp=(FP_SINGLE*)&t_1;
+                    // unsigned char old=fp->nExponent;
+                    // fp->nExponent+=w;
+                    // unsigned char s_new=fp->nExponent;
 
-                    if(sign_data)
-                        sum+=input_data[input_offset];
-                    else
-                        sum-=input_data[input_offset];
+                    // if(w<0&&s_new>old)
+                    //     fp->nExponent=1;
+                    // else if(w>0&&s_new<old)
+                    //     fp->nExponent=254;
+
+                    // if(sign_data[weight_offset])
+                    // {
+                    //     sum+=t_1;
+                    // }
+                    // else
+                    // {
+                    //     sum-=t_1;
+                    //     t_1=t_1*-1;
+                    // }
+
+                    sum+=input_data[input_offset]*weight_data[weight_offset];
                 }
 
             }
@@ -130,23 +143,23 @@ namespace mdl {
         int kernel_h = _weight[0]->dimension(2);
         int kernel_w = _weight[0]->dimension(3);
 
+        bool *sign_data = get_sign()[0]->get_sign_data();
+
         int image_size = input_height*input_width;
         int kernel_size = kernel_w*kernel_h;
-
-        bool *sign_data = get_sign()[0]->get_sign_data();
 
         int output_offset=0;
         int padding = _pad;
         for(int i=0;i<output_channel;i++)
         {
-            for(int locx=padding*-1;locx<input_height+padding-kernel_h;locx+=_stride)
-                for(int locy=padding*-1;locy<input_width+padding-kernel_w;locy+=_stride)
+            for(int locx=padding*-1;locx<=input_height+padding-kernel_h;locx+=_stride)
+                for(int locy=padding*-1;locy<=input_width+padding-kernel_w;locy+=_stride)
                 {
                     float *p=input_data;
                     float *w=weight_data;
                     bool *s=sign_data;
-                    int sum=0;
-                    for(int cnt=0;cnt<input_channel;s+=image_size,p+=image_size,w+=kernel_size,cnt++)
+                    float sum=0;
+                    for(int cnt=0;cnt<input_channel;s+=kernel_size,p+=image_size,w+=kernel_size,cnt++)
                     {
                         chan_gemm(p,s,locx,locy,kernel_w,kernel_h,w,sum);
                     }
@@ -154,6 +167,8 @@ namespace mdl {
                     output_data[output_offset++]=sum;
                 }
 
+                weight_data+=kernel_size*input_channel;
+                sign_data+=kernel_size*input_channel;
 
         }
 
@@ -171,6 +186,7 @@ namespace mdl {
         int weight_offset_ = m * k / _group; //get the kernel weight value
         int output_offset_ = m * n / _group; //get output data in the output buffer
         int input_offset = input_height*input_width*input_channel/_group;
+
 
         for(int i=0;i<_group;i++)
         {
