@@ -93,16 +93,14 @@ int run() {
     }
     mdl::Loader *loader = mdl::Loader::shared_instance();
 
-    // std::string prefix("./model/googlenet/");
-    // auto t1 = mdl::time();
-    // bool load_success = loader->load(prefix + "g_model.min.json", prefix + "g_data.min.bin");
-
-    std::string prefix("./model/mobilenet/");
+    std::string prefix("./model/googlenet/");
     auto t1 = mdl::time();
-    bool load_success = loader->load(prefix + "m_model.min.json", prefix + "m_data.min.bin");
+    bool load_success = loader->load(prefix + "g_model.min.json", prefix + "g_data.min.bin");
 
-    auto t2 = mdl::time();
-    cout << "load time : " << mdl::time_diff(t1, t2) << "ms" << endl;
+    // std::string prefix("./model/mobilenet/");
+    // auto t1 = mdl::time();
+    // bool load_success = loader->load(prefix + "m_model.min.json", prefix + "m_data.min.bin");
+
     if (!load_success) {
         cout << "load failure" << endl;
         loader->clear();
@@ -113,6 +111,14 @@ int run() {
     }
     mdl::Net *net = new mdl::Net(loader->_model);
     net->set_thread_num(thread_num);
+
+#ifdef OPTIMIZE
+    net->Transform_Conv();
+#endif
+
+    auto t2 = mdl::time();
+    cout << "load time : " << mdl::time_diff(t1, t2) << "ms" << endl;
+
     int count = 1;
     double total = 0;
     vector<float> result;

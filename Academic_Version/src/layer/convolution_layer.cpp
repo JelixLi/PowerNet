@@ -129,7 +129,7 @@ namespace mdl {
 
     }
 
-    void ConvolutionLayer::Power_Gemm(float *input_data,float *weight_data,float *output_data)
+    void ConvolutionLayer::Power_Gemm(float *input_data,float *weight_data,float *output_data,bool *sign_data)
     {
 
         int input_channel = _input[0]->dimension(1)/_group;
@@ -142,8 +142,6 @@ namespace mdl {
 
         int kernel_h = _weight[0]->dimension(2);
         int kernel_w = _weight[0]->dimension(3);
-
-        bool *sign_data = get_sign()[0]->get_sign_data();
 
         int image_size = input_height*input_width;
         int kernel_size = kernel_w*kernel_h;
@@ -183,14 +181,16 @@ namespace mdl {
         int m = _output[0]->dimension(1);  // output channel
         int n = _output[0]->count(2);  // output  width * height
         int k = _weight[0]->count(1);   // input_channels * kernel_h * kernel_w
-        int weight_offset_ = m * k / _group; //get the kernel weight value
+        int weight_offset_ = m * k / _group ; //get the kernel weight value
         int output_offset_ = m * n / _group; //get output data in the output buffer
         int input_offset = input_height*input_width*input_channel/_group;
 
+        bool *sign_data = get_sign()[0]->get_sign_data();
+        int sign_offset=weight_offset_;
 
         for(int i=0;i<_group;i++)
         {
-            Power_Gemm(input_data+i*input_offset,weight_data+i*weight_offset_,output_data+i*output_offset_);
+            Power_Gemm(input_data+i*input_offset,weight_data+i*weight_offset_,output_data+i*output_offset_,sign_data+i*sign_offset);
         }
 
     }

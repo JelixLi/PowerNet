@@ -149,9 +149,9 @@ namespace mdl {
 #else
         for (int i = 0; i < _layers.size(); i++) {
 
-           cout << _layers[i]->name() << " input ="<< _layers[i]->input()[0]->descript()<<endl;
+           //cout << _layers[i]->name() << " input ="<< _layers[i]->input()[0]->descript()<<endl;
             _layers[i]->forward();
-           cout << _layers[i]->name() << "  output = "<<_layers[i]->output()[0]->descript()<<endl;
+           //cout << _layers[i]->name() << "  output = "<<_layers[i]->output()[0]->descript()<<endl;
         }
 
 #endif
@@ -175,9 +175,7 @@ namespace mdl {
     vector<float> Net::predict(float *image) {
         int start = 0;
         int end = _layers.size();
-#ifdef OPTIMIZE
-        Transform_Conv();
-#endif
+
         vector<float> temp=Net::forward_from_to(image, start, end);
         return temp;
     }
@@ -262,7 +260,7 @@ namespace mdl {
                     sum_1+=orig_data[k]*wt*2;
                     sum_2+=wt*wt*2;
 
-                    orig_data[k]=e;
+                    //orig_data[k]=e;
                     sign_data[k]=s;
                     // if((k+1)%kernel_size==0)
                     // {
