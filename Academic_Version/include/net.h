@@ -3,6 +3,7 @@
 #define MDL_NET_H
 
 #include "base/layer.h"
+#include "layer/convolution_layer.h"
 
 namespace mdl {
     /**
@@ -43,7 +44,7 @@ namespace mdl {
         void set_thread_num(int thread_num) {
             _thread_num = thread_num;
         }
-        
+
         void Transform_Conv();
 
 #ifdef NEED_DUMP
@@ -51,6 +52,9 @@ namespace mdl {
         void dump(string filename);
 
 #endif
+
+
+
     private:
         string _name;
 
@@ -58,13 +62,16 @@ namespace mdl {
 
         vector<Layer *> _layers;
 
-        vector<Layer *> convptr;
+        vector<ConvolutionLayer *> convptr;
 
 #ifdef NEED_DUMP
         void dump_with_quantification(string filename);
 
         void dump_without_quantification(string filename);
 #endif
+
+
+
     };
 };
 

@@ -18,17 +18,16 @@
  * This is an empirical value indicating how many inception layers could be accelerated by multi-thread.
  */
 #define MAX_INCEPTION_NUM  9
-
-#define OPTIMIZE
+#define GPU_MODE
 
 #ifdef ANDROID
 #include <android/log.h>
 #include "math/neon_mathfun.h"
 #endif
 
-#ifndef MDL_MAC
-#include <arm_neon.h>
-#endif
+// #ifndef MDL_MAC
+// #include <arm_neon.h>
+// #endif
 
 #include "json/json11.h"
 #include "math/math.h"
@@ -38,6 +37,11 @@
 #include <string.h>
 #include <limits.h>
 #endif
+
+#ifdef BIT_QUANTIZATION
+#include "base/bit.h"
+#endif
+
 
 using std::min;
 using std::max;

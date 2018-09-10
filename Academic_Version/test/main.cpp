@@ -26,7 +26,7 @@ float *getImage(string path)
     }
 
     rewind(file);
-    
+
     char *data = new char[size];
     size_t bytes_read = fread(data, 1, size, file);
     if (bytes_read != size) {
@@ -93,13 +93,17 @@ int run() {
     }
     mdl::Loader *loader = mdl::Loader::shared_instance();
 
-    std::string prefix("./model/googlenet/");
-    auto t1 = mdl::time();
-    bool load_success = loader->load(prefix + "g_model.min.json", prefix + "g_data.min.bin");
+    // std::string prefix("./model/googlenet/");
+    // auto t1 = mdl::time();
+    // bool load_success = loader->load(prefix + "g_model.min.json", prefix + "g_data.min.bin");
 
     // std::string prefix("./model/mobilenet/");
     // auto t1 = mdl::time();
     // bool load_success = loader->load(prefix + "m_model.min.json", prefix + "m_data.min.bin");
+
+    std::string prefix("./model/squeezenet/");
+    auto t1 = mdl::time();
+    bool load_success = loader->load(prefix + "s_model.min.json", prefix + "s_data.min.bin");
 
     if (!load_success) {
         cout << "load failure" << endl;
@@ -112,9 +116,6 @@ int run() {
     mdl::Net *net = new mdl::Net(loader->_model);
     net->set_thread_num(thread_num);
 
-#ifdef OPTIMIZE
-    net->Transform_Conv();
-#endif
 
     auto t2 = mdl::time();
     cout << "load time : " << mdl::time_diff(t1, t2) << "ms" << endl;
@@ -131,10 +132,10 @@ int run() {
         total += diff;
     }
     cout << "total cost: " << total / count << "ms." << endl;
-    for (float num: result) {
-        cout << num << " ";
-    }
-    cout <<endl;
+    // for (float num: result) {
+    //     cout << num << " ";
+    // }
+    // cout <<endl;
     // uncomment while testing clacissification models
 //    cout << "the max prob index = "<<find_max(result)<<endl;
     cout << "Done!" << endl;

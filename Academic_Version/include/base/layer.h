@@ -84,27 +84,7 @@ namespace mdl {
             return _pid;
         }
 
-#ifdef NEED_OPTIMIZE
 
-        static vector<Matrix *> _beta;
-
-#endif
-    vector<Matrix*> get_alpha()
-    {
-        return alpha;
-    }
-    void set_alpha(vector<Matrix*> p)
-    {
-        alpha=p;
-    }
-    vector<Matrix*> get_sign()
-    {
-        return sign;
-    }
-    void set_sign(vector<Matrix*> s)
-    {
-        sign=s;
-    }
     protected:
         int _pid;
 
@@ -118,9 +98,7 @@ namespace mdl {
 
         vector<Matrix *> _weight;
 
-        vector<Matrix*> alpha;
 
-        vector<Matrix*> sign;
     };
 };
 

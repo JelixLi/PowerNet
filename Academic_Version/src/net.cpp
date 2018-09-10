@@ -25,6 +25,8 @@
 #endif
 
 namespace mdl {
+
+
     Net::Net(const Json &config) : _thread_num(1) {
         for (const auto &layer_config: config["layer"].array_items()) {
             Layer *layer = nullptr;
@@ -33,8 +35,9 @@ namespace mdl {
             if (type == "ConcatLayer") {
                 layer = new ConcatLayer(layer_config);
             } else if (type == "ConvolutionLayer") {
-                layer = new ConvolutionLayer(layer_config);
-                convptr.push_back(layer);
+                ConvolutionLayer *conv_layer= new ConvolutionLayer(layer_config);
+                layer = conv_layer;
+                convptr.push_back(conv_layer);
             } else if (type == "FCLayer") {
                 layer = new FCLayer(layer_config);
             } else if (type == "PoolingLayer") {
@@ -63,6 +66,7 @@ namespace mdl {
                 throw_exception("could not create [%s] layer", layer_config["name"].string_value().c_str());
             }
         }
+
     }
 
     Net::~Net() {
@@ -85,6 +89,8 @@ namespace mdl {
             layers[i]->forward();
         }
     }
+
+
 
     vector<float> Net::forward_from_to(float *image, int start, int end, bool sampling) {
         vector<float> result;
@@ -147,12 +153,14 @@ namespace mdl {
             _layers[i]->forward(thread_num);
         }
 #else
+
         for (int i = 0; i < _layers.size(); i++) {
 
            //cout << _layers[i]->name() << " input ="<< _layers[i]->input()[0]->descript()<<endl;
             _layers[i]->forward();
            //cout << _layers[i]->name() << "  output = "<<_layers[i]->output()[0]->descript()<<endl;
         }
+
 
 #endif
 
@@ -180,113 +188,112 @@ namespace mdl {
         return temp;
     }
 
-    void DebugPrint(vector<Matrix*> item)
+    // void DebugPrint(vector<Matrix*> item)
+    // {
+    //     for(vector<Matrix*>::iterator cit=item.begin();
+    //     cit!=item.end();
+    //     ++cit)
+    //     {
+    //         Matrix *mp=*cit;
+    //         cout<<"name: "<<mp->get_name()<<" ";
+    //         vector<int> dim=mp->get_dimensions();
+    //         cout<<"dimensions: ";
+    //         for(int i=0;i<dim.size();i++)
+    //         {
+    //             cout<<dim[i];
+    //             if(i!=dim.size()-1)
+    //                 cout<<"X";
+    //         }
+    //         cout<<endl;
+    //         int data_size=mp->count();
+    //         float *data=mp->get_data();
+    //         for(int j=0;j<data_size;j++)
+    //         {
+    //             cout<<data[j]<<" ";
+    //             if((j+1)%5==0)
+    //                 cout<<"\n";
+    //         }
+    //         cout<<"\n"<<endl;
+    //     }
+    // }
+    //
+
+    unsigned int getBitWeight(int s,float a)
     {
-        for(vector<Matrix*>::iterator cit=item.begin();
-        cit!=item.end();
-        ++cit)
-        {
-            Matrix *mp=*cit;
-            cout<<"name: "<<mp->get_name()<<" ";
-            vector<int> dim=mp->get_dimensions();
-            cout<<"dimensions: ";
-            for(int i=0;i<dim.size();i++)
-            {   
-                cout<<dim[i];
-                if(i!=dim.size()-1)
-                    cout<<"X";
-            }
-            cout<<endl;
-            int data_size=mp->count();
-            float *data=mp->get_data();
-            for(int j=0;j<data_size;j++)
-            {
-                cout<<data[j]<<" ";
-                if((j+1)%5==0)
-                    cout<<"\n";
-            }
-            cout<<"\n"<<endl;
-        }
+        // int delta=0;
+        // if(a>delta)
+        //     return 2u<<s;
+        // else if(a<delta)
+        //     return 3u<<s;
+        // else
+        //     return 0u;
+        if(a>0)
+            return 1;
+        else
+            return 0;
     }
 
-    int exp_max(float f)
+    void Bit_Transform(int m,int k,float *orig_data)
     {
-        float f_1=floor(f);
-        float f_2=ceil(f);
-        float err_1=f-f_1;
-        float err_2=f_2-f;
-        return err_1>err_2?f_2:f_1;
+        int BK=k/16;
+        int _BK=k%16;
+        if(_BK>0)
+            BK++;
+
+        int bit_pos=0;
+        unsigned int *bit_buffer=new unsigned int[m*BK];
+        memset(bit_buffer,0,sizeof(bit_buffer));
+        float *sp=orig_data;
+        unsigned int *bs=bit_buffer;
+        for(int j=0;j<m;j++)
+        {
+            for(int i=0;i<k;i++)
+            {
+                if(bit_pos==32)
+                {
+                    bs++;
+                    bit_pos=0;
+                }
+                (*bs)^=getBitWeight(bit_pos,*(sp++));
+                bit_pos+=2;
+            }
+            bs++;
+            bit_pos=0;
+        }
+        memcpy((unsigned int*)orig_data,bit_buffer,m*BK*sizeof(unsigned int));
+        delete [] bit_buffer;
     }
+
+
 
     void Net::Transform_Conv()
     {
         int n=convptr.size();
         for(int i=0;i<n;i++)
         {
-            Layer *p=convptr[i];
-
-            //  DebugPrint(p->output());
-            //DebugPrint(p->weight());
-
-            vector<Matrix*> weight=p->weight();
-            for(int j=0;j<1;j++)
+            if(convptr[i]->get_kernel_size()!=1)
             {
-                int data_size=weight[j]->count();
-                float *orig_data=weight[j]->get_data();
-                int alpha_num=weight[j]->dimension(0);
-                //float *alpha_data=new float[alpha_num];
-                bool *sign_data=new bool[data_size];
-                int kernel_size=weight[j]->count(1);
-                float sum_1=0,sum_2=0;
-                int index=0;
+                Layer *p=convptr[i];
 
-                // cout<<alpha_num<<endl;
-                // cout<<data_size<<endl;
-                // cout<<kernel_size<<endl;
-                // cout<<endl;
+                //  DebugPrint(p->output());
+                //DebugPrint(p->weight());
 
-                for(int k=0;k<data_size;k++)
+                vector<Matrix*> weight=p->weight();
+                for(int j=0;j<weight.size();j++)
                 {
-                    int e;
-                    bool s;
-                    float temp_e=orig_data[k]<0?log(orig_data[k]*-1)/log(2):log(orig_data[k])/log(2);
-                    e=exp_max(temp_e);
-                    if(orig_data[k]<0)
-                        s=0;
-                    else
-                        s=1;
+                    int k=weight[j]->count(1);   // input_channels * kernel_h * kernel_w
+                    float *orig_data=weight[j]->get_data();
+                    int m=weight[j]->dimension(0);
 
-                    float wt=pow(2,e);
-                    sum_1+=orig_data[k]*wt*2;
-                    sum_2+=wt*wt*2;
-
-                    //orig_data[k]=e;
-                    sign_data[k]=s;
-                    // if((k+1)%kernel_size==0)
-                    // {
-                    //     alpha_data[index++]=sum_1/sum_2;
-                    //     index++;
-                    //     sum_1=sum_2=0;
-                    // }
+                    Bit_Transform(m,k,orig_data);
                 }
-                // Matrix *alpha_matrix=new Matrix();
-                // alpha_matrix->resize(p->output()[0]->get_dimensions());
-                // alpha_matrix->set_data(alpha_data);
-                // vector<Matrix*> alpha_vector;
-                // alpha_vector.push_back(alpha_matrix);
-                // p->set_alpha(alpha_vector);
-
-                Matrix *sign_matrix=new Matrix();
-                sign_matrix->resize(weight[0]->get_dimensions());
-                sign_matrix->set_data(sign_data);
-                vector<Matrix*> sign_vector;
-                sign_vector.push_back(sign_matrix);
-                p->set_sign(sign_vector);
-
 
             }
+
         }
     }
+
+
 
 #ifdef NEED_DUMP
     void Net::dump(string filename) {

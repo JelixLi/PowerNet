@@ -1,23 +1,4 @@
-/* Copyright (c) 2016 Baidu, Inc. All Rights Reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-==============================================================================*/
 #ifndef MDL_CONVOLUTION_LAYER_H
 #define MDL_CONVOLUTION_LAYER_H
 
@@ -31,8 +12,25 @@ namespace mdl {
             ~ConvolutionLayer();
             void forward(int thread_num);
 
-            void chan_gemm(float *input_data,bool *sign_data,int locx,int locy,int kernal_h,int kernal_w,float *weight_data,float &sum);
-            void Power_Gemm(float *input_data,float *weight_data,float *output_data,bool *sign_data);
+            int get_kernel_size()
+            {
+                return _kernel_size;
+            }
+
+#ifdef XNOR_MODE
+
+            void Compute_Mlp();
+
+            void Compute_Sum(float *input_data,int input_height,int input_width,int input_channel);
+
+            void Compute_Mlp(int input_height,int input_width);
+
+            void gemm_3X3_bit(int col_height,int col_width,int col_channel,
+                    int output_num,float *data_col,float *weight_data,float *output_data);
+
+            void gemm_1X1_();
+
+#endif
 
         private:
             void forward_gemm(float *input_data, float *weight_data, float *output_data, int thread_num);
@@ -44,9 +42,27 @@ namespace mdl {
             int _bias_term;
             int _group;
             bool _need_im2col;
+
             Matrix *_col_buffer;
             Matrix *_bias_buffer;
+
+#ifdef XNOR_MODE
+            //xnor mode
+            float *_sum_buffer;
+            float *_mlp_buffer;
+            float *_mlp_kernel_buffer;
+            float *_sum_col_data;
+#endif 
+
+#ifdef GPU_MODE
+            //gpu mode
+            float *_gpu_input_data_buffer;
+            float *_gpu_output_data_buffer;
+            float *_gpu_kernel_buffer;
+#endif
     };
 };
 
 #endif
+
+

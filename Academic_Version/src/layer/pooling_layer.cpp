@@ -31,6 +31,8 @@ namespace mdl {
         descript();
     }
 
+
+
     void PoolingLayer::forward_max() {
         float *input_data = _input[0]->get_data();
         float *output_data = _output[0]->get_data();

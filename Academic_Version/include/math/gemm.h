@@ -3,6 +3,7 @@
 #define MDL_GEMM_H
 #include "commons/commons.h"
 
+
 namespace mdl {
     constexpr const int MC = 384;
 
@@ -13,6 +14,7 @@ namespace mdl {
     constexpr const int MR = 4;
 
     constexpr const int NR = 4;
+
 
     struct Gemmer {
         static vector<Gemmer *> gemmers;
@@ -43,9 +45,12 @@ namespace mdl {
 
         void dgemm_nn(int m, int n, int k, float alpha, const float *A, int incRowA, int incColA, const float *B, int incRowB, int incColB, float beta, float *C, int incRowC, int incColC);
 
+
         void sgemm(int m, int n, int k, const float *A, const float *B, float *C);
 
         void sgemm(int m, int n, int k, const float *A, const float *B, float *C, float alpha, float beta);
+
+
     };
 };
 #endif
