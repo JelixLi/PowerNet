@@ -1,0 +1,1 @@
+/usr/bin/c++   -g -std=c++11 -O3 -DNDEBUG  -pthread CMakeFiles/PowerTest.dir/test/main.cpp.o  -o build/PowerTest -rdynamic build/libPower-static.a 
